@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>دستیار جلسه‌ی اتوماسیون</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&family=Lalezar&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root{
+    --paper:#36363B; --card:#141416; --ink:#F3F1EB; --ink-soft:#B6B2AA;
+    --ink-faint:#888279; --line:#2C2C31; --line-soft:#202023;
+    --accent:#1FA37D; --accent-soft:#15332B; --accent-ink:#74D8B6;
+    --teal:#2BB58C; --teal-soft:#16332A; --teal-ink:#7FE0BE; --teal-line:#244A3D;
+    --amber:#E0A23A; --amber-soft:#3A2D12; --hot:#CB6A40;
+    --r:14px; --r-sm:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);font-family:'Vazirmatn',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  body{padding:0;min-height:100vh}
+  .app{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+  .display{font-family:'Lalezar',cursive;font-weight:400}
+  ::selection{background:var(--accent-soft)}
+
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .logo{width:38px;height:38px;border-radius:11px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .brand h1{font-size:17px;font-weight:600;line-height:1.2}
+  .brand p{font-size:12px;color:var(--ink-faint);margin-top:2px}
+
+  .progress-wrap{margin-bottom:26px}
+  .steps-row{display:flex;gap:6px;margin-bottom:14px}
+  .step-dot{flex:1;height:4px;border-radius:4px;background:var(--line);transition:background .3s}
+  .step-dot.done{background:var(--accent)}
+  .step-dot.active{background:var(--accent)}
+  .step-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-faint)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 26px 24px}
+  .phase-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--accent-ink);background:var(--accent-soft);padding:5px 11px;border-radius:20px;margin-bottom:16px}
+  .phase-title{font-size:22px;font-weight:600;line-height:1.3;margin-bottom:4px}
+  .phase-sub{font-size:13px;color:var(--ink-soft);margin-bottom:24px}
+
+  .q{margin-bottom:22px}
+  .q:last-child{margin-bottom:0}
+  .q-label{font-size:15px;font-weight:500;margin-bottom:10px;line-height:1.6;display:flex;gap:8px;align-items:flex-start}
+  .q-label .dot{color:var(--accent);font-size:15px;flex-shrink:0;margin-top:1px}
+  .q-why{font-size:12.5px;color:var(--ink-faint);background:var(--line-soft);border-radius:var(--r-sm);padding:9px 12px;margin-bottom:12px;line-height:1.65}
+  .q-ex{background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:var(--r-sm);padding:11px 13px;margin-bottom:12px}
+  .q-ex .ex-t{font-size:12px;font-weight:600;color:var(--teal-ink);margin-bottom:7px}
+  .q-ex .ex-i{font-size:13px;color:var(--teal-ink);line-height:2}
+
+  textarea,input[type=text]{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;resize:vertical;transition:border-color .15s, background .15s}
+  textarea{min-height:64px}
+  textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent);background:var(--line-soft)}
+
+  .num-row{display:flex;align-items:center;gap:14px}
+  .num-row input[type=range]{flex:1;accent-color:var(--accent);height:5px}
+  .num-val{min-width:74px;text-align:center;background:var(--accent-soft);color:var(--accent-ink);border-radius:var(--r-sm);padding:8px 10px;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+
+  .choices{display:flex;gap:9px;flex-wrap:wrap}
+  .choice{flex:1;min-width:90px;text-align:center;font-size:13.5px;font-weight:500;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 8px;cursor:pointer;transition:all .15s;user-select:none}
+  .choice:hover{border-color:var(--ink-faint)}
+  .choice.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  .nav{display:flex;gap:12px;margin-top:26px}
+  .btn{font-family:inherit;font-size:15px;font-weight:600;border-radius:var(--r-sm);padding:13px 22px;cursor:pointer;border:1px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+  .btn-primary{background:var(--accent);color:#fff;flex:1}
+  .btn-primary:hover{background:var(--accent-ink)}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--ink-soft)}
+  .btn-ghost:hover{border-color:var(--ink-faint)}
+
+  /* intro */
+  .intro{text-align:center;padding:30px 10px 6px}
+  .intro .big{font-size:30px;line-height:1.3;margin-bottom:14px}
+  .intro p{font-size:14.5px;color:var(--ink-soft);line-height:1.8;max-width:480px;margin:0 auto 26px}
+  .intro .field{max-width:340px;margin:0 auto 8px;text-align:right}
+  .intro .field label{font-size:13px;color:var(--ink-faint);margin-bottom:6px;display:block}
+  .phase-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:24px 0 30px}
+  .phase-chip{font-size:12.5px;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:7px 13px}
+
+  /* results */
+  .res-head{text-align:center;margin-bottom:6px}
+  .seg{display:flex;gap:4px;background:var(--line-soft);border-radius:var(--r-sm);padding:4px;max-width:340px;margin:0 auto 22px}
+  .seg button{flex:1;font-family:inherit;font-size:13.5px;font-weight:600;border:none;background:transparent;color:var(--ink-soft);padding:9px 10px;border-radius:7px;cursor:pointer;transition:all .15s}
+  .seg button.on{background:#3A3A40;color:var(--ink);box-shadow:none}
+  .client-hello{text-align:center;font-size:14.5px;color:var(--ink-soft);line-height:1.8;max-width:480px;margin:0 auto 22px}
+  @media print{.seg{display:none!important}}
+  .res-head .label{font-size:13px;color:var(--ink-faint);margin-bottom:18px}
+  .res-client{font-size:24px;font-weight:600;margin-bottom:4px}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0}
+  .metric{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 16px}
+  .metric.hero{grid-column:1/-1;background:var(--teal-soft);border-color:var(--teal-line)}
+  .metric .m-label{font-size:12.5px;color:var(--ink-faint);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .metric.hero .m-label{color:var(--teal-ink)}
+  .metric .m-val{font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+  .metric.hero .m-val{color:var(--teal-ink);font-size:38px}
+  .metric .m-unit{font-size:13px;font-weight:500;color:var(--ink-soft);margin-right:5px}
+  .metric.hero .m-unit{color:var(--teal-ink)}
+
+  .bars{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:18px}
+  .bars h3{font-size:14px;font-weight:600;margin-bottom:16px}
+  .bar-row{margin-bottom:14px}
+  .bar-row:last-child{margin-bottom:0}
+  .bar-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+  .bar-top .v{font-weight:600;font-variant-numeric:tabular-nums}
+  .bar-track{height:13px;background:var(--line-soft);border-radius:7px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:7px;transition:width .8s cubic-bezier(.2,.7,.3,1)}
+
+  .score-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:18px;display:flex;align-items:center;gap:20px}
+  .gauge{position:relative;width:96px;height:96px;flex-shrink:0}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .g-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .gauge .g-num b{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+  .gauge .g-num span{font-size:11px;color:var(--ink-faint)}
+  .score-text h3{font-size:16px;font-weight:600;margin-bottom:6px}
+  .score-text p{font-size:13px;color:var(--ink-soft);line-height:1.7}
+
+  .recs{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:18px}
+  .recs h3{font-size:15px;font-weight:600;margin-bottom:14px}
+  .rec{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:14px;line-height:1.65}
+  .rec:last-child{border-bottom:none;padding-bottom:0}
+  .rec .ic{flex-shrink:0;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+  .rec.win .ic{background:var(--teal-soft);color:var(--teal-ink)}
+  .rec.warn .ic{background:var(--amber-soft);color:var(--amber)}
+  .rec.info .ic{background:var(--accent-soft);color:var(--accent-ink)}
+  .rec b{font-weight:600}
+
+  .notes-block{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:18px}
+  .notes-block h3{font-size:15px;font-weight:600;margin-bottom:12px}
+  .note-item{font-size:13px;line-height:1.7;padding:8px 0;border-bottom:1px solid var(--line-soft)}
+  .note-item:last-child{border-bottom:none}
+  .note-item .nl{color:var(--ink-faint);display:block;font-size:12px;margin-bottom:2px}
+  .note-item .nv{color:var(--ink)}
+
+  .foot-note{font-size:11.5px;color:var(--ink-faint);text-align:center;line-height:1.8;margin-top:22px}
+  @media print{
+    :root{--paper:#fff;--card:#fff;--ink:#211C16;--ink-soft:#5C544A;--ink-faint:#7A746B;--line:#E5DFD3;--line-soft:#EFEAE0;--accent:#1D6E56;--accent-soft:#E1F0EA;--accent-ink:#0E4233;--teal:#1D6E56;--teal-soft:#E1F0EA;--teal-ink:#0E4233;--teal-line:#CFE6DC;--amber:#B07208;--amber-soft:#F8ECD4;--hot:#B4471F;}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    @page{size:A4 portrait;margin:10mm}
+    body{background:#fff}
+    .nav,.topbar .logo,.btn{display:none!important}
+    .app{padding:0;max-width:100%}
+    .topbar{margin-bottom:10px}
+    .res-client{font-size:20px}
+    .res-head .label{margin-bottom:8px}
+    .client-hello{font-size:12px;line-height:1.5;margin-bottom:12px}
+    .metrics{gap:8px;margin:12px 0}
+    .metric{padding:12px 14px}
+    .metric .m-label{margin-bottom:5px}
+    .metric .m-val{font-size:22px}
+    .metric.hero .m-val{font-size:30px}
+    .bars{padding:14px;margin-bottom:12px}
+    .bars h3{margin-bottom:10px}
+    .bar-row{margin-bottom:9px}
+    .recs{padding:14px 18px;margin-bottom:12px}
+    .recs h3{margin-bottom:8px}
+    .rec{padding:7px 0;font-size:12.5px}
+    .foot-note{margin-top:10px}
+    .card,.metric,.bars,.score-card,.recs,.notes-block{break-inside:avoid}
+  }
+  @media(max-width:520px){
+    .metrics{grid-template-columns:1fr} .choices{flex-direction:column}
+    .num-row{flex-direction:column;align-items:stretch} .num-val{min-width:0}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState, useMemo} = React;
+
+const fa = n => String(n).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+const faMoney = n => fa(Math.round(n).toLocaleString('en-US')) + ' €';
+
+const PHASES = [
+  {
+    tag:'۱ — شناخت بیزینس', icon:'◔', title:'بیزینس را بشناسیم',
+    sub:'اول بگذار مشتری درباره‌ی کارِ روزمره‌اش حرف بزند.',
+    questions:[
+      {id:'biz_type', type:'text', label:'چه نوع کسب‌وکاری دارید؟ (مغازه، شرکت، خدمات…)', why:'نوع بیزینس مدل اتوماسیون را مشخص می‌کند.'},
+      {id:'routine', type:'textarea', label:'یک هفته‌ی کاری معمولی شما و تیم چطور می‌گذرد؟', why:'جریان واقعی کار و اینکه وقتِ هرکس کجا می‌رود را آشکار می‌کند.'},
+      {id:'revenue', type:'textarea', label:'بیشترِ درآمد از کجا می‌آید؟ مشتری اصلی کیست؟', why:'اتوماسیون باید به جایی برود که پول جابه‌جا می‌شود.'},
+      {id:'team', type:'slider', min:1, max:20, def:2, unit:'نفر', label:'چند نفر در تیم هستند؟', why:'مالکِ فرایند و کسی که کار دستی را انجام می‌دهد را پیدا کن.'},
+    ]
+  },
+  {
+    tag:'۲ — نقشه‌ی فرایند', icon:'◑', title:'فرایند فعلی را نقشه بزنیم',
+    sub:'یک نمونه‌ی واقعی و اخیر را قدم‌به‌قدم دنبال کن.',
+    questions:[
+      {id:'task', type:'textarea', label:'تکراری‌ترین کاری که زمان می‌برد چیست؟ قدم‌به‌قدم توضیح دهید.', why:'هر مرحله‌ی دستی، هر کپی‌پیست و هر انتظار را شناسایی کن.'},
+      {id:'hours', type:'slider', min:0, max:40, def:8, unit:'ساعت', label:'این کار در هفته چند ساعت وقت می‌گیرد؟', why:'حجم و زمان = پایه‌ی اصلی محاسبه‌ی صرفه‌جویی.', key:true},
+      {id:'freq', type:'choice', def:'med', options:[['high','چند بار در روز'],['med','چند بار در هفته'],['low','گاه‌به‌گاه']], label:'هر چند وقت یک‌بار تکرار می‌شود؟', why:'هرچه پرتکرارتر، اتوماسیون بیشتر می‌ارزد.', key:true},
+      {id:'copy', type:'multi', def:['manual'], options:[['manual','بله، دستی کپی می‌کنم'],['connected','نه، سیستم‌ها وصل‌اند'],['paper','روی کاغذ/دفتر'] ], label:'اطلاعات را دستی بین برنامه‌ها کپی می‌کنید؟', why:'کپی‌پیست دستی بهترین نامزد اتوماسیون است. (می‌توانید چند مورد را انتخاب کنید)', key:true},
+    ]
+  },
+  {
+    tag:'۳ — دردها', icon:'◕', title:'درد را کمّی کنیم',
+    sub:'بگذار مشتری خودش هزینه‌ی پنهان را ببیند.',
+    questions:[
+      {id:'hate', type:'textarea', label:'از چه کاری متنفرید چون تکراری و خسته‌کننده است؟', why:'درد صادقانه = فرصت واقعی.'},
+      {id:'err_impact', type:'choice', def:'med', options:[['high','زیاد و پرهزینه'],['med','گاهی'],['low','به‌ندرت']], label:'وقتی این کار اشتباه می‌شود، چقدر دردسر دارد؟', why:'خطای بیشتر = ارزش بیشترِ اتوماسیون.', key:true},
+      {id:'err_cost', type:'slider', min:0, max:3000, step:50, def:300, unit:'€ در ماه', unknownable:true, label:'خطاها و دوباره‌کاری ماهانه تقریباً چقدر هزینه دارد؟', why:'منظور فقط جریمه نیست؛ شامل وقتِ صرف‌شده برای اصلاح اشتباه، دوباره‌کاری و مشتری ازدست‌رفته هم هست. اگر مشتری عدد دقیق ندارد، دکمه‌ی «نمی‌دانم» را بزن تا خودکار تخمین زده شود.', key:true},
+    ]
+  },
+  {
+    tag:'۴ — ابزارها', icon:'◷', title:'سیستم‌های فعلی',
+    sub:'باید بدانی چه چیزی قابل اتصال است.',
+    questions:[
+      {id:'tools', type:'textarea', label:'از چه نرم‌افزارها و اپ‌هایی استفاده می‌کنید؟ (CRM، حسابداری، تقویم، واتساپ، اکسل…)', why:'بیشتر اتوماسیون‌ها چسبِ بین اپ‌های موجود هستند.'},
+      {id:'rule', type:'choice', def:'yes', options:[['yes','بله، قاعده مشخص دارد'],['somewhat','تا حدی'],['no','نه، قضاوت لازم است']], label:'قواعد این کار را می‌توان روی کاغذ نوشت؟', why:'کارِ قاعده‌مند نامزد عالی است؛ کارِ قضاوتی باید انسانی بماند.', key:true},
+    ]
+  },
+  {
+    tag:'۵ — بودجه و تصمیم', icon:'◔', title:'صلاحیت را بسنجیم',
+    sub:'سریع و حرفه‌ای — مستقیم بپرس.',
+    questions:[
+      {id:'wage', type:'slider', min:12, max:120, def:30, unit:'€ در ساعت', label:'هزینه‌ی ساعتی کسی که این کار را می‌کند چقدر است؟', why:'پایه‌ی محاسبه‌ی صرفه‌جویی ریالی.', key:true},
+      {id:'decider', type:'choice', def:'yes', options:[['yes','بله، خودم'],['partly','تا حدی'],['no','نفر دیگری']], label:'تصمیم نهایی با شماست؟', why:'اگر تصمیم‌گیرنده در جلسه نیست، جلسه ناقص است.'},
+      {id:'timeline', type:'choice', def:'soon', options:[['soon','هرچه زودتر'],['quarter','چند ماه آینده'],['later','هنوز نمی‌دانم']], label:'کِی می‌خواهید راه بیفتد؟', why:'«هرچه زودتر» = سیگنال خرید واقعی.'},
+    ]
+  },
+  {
+    tag:'۶ — موفقیت', icon:'●', title:'موفقیت را تعریف کنیم',
+    sub:'بدون معیار، توجیه کسب‌وکاری وجود ندارد.',
+    questions:[
+      {id:'success', type:'textarea', label:'۶ ماه دیگر با چه چیزی می‌گویید این کار ارزشش را داشت؟', why:'موفقیت باید قابل اندازه‌گیری باشد.', examples:['«اگر در هفته ۱۰ ساعت وقتم آزاد شود» 🕐','«اگر دیگر مجبور نباشم شب‌ها فاکتور بزنم» 😮‍💨','«اگر تعداد مشتری‌هایی که فراموش می‌کنند بیایند نصف شود» 📉','«اگر ماهی ۵۰۰ یورو در هزینه‌ها صرفه‌جویی شود» 💶']},
+    ]
+  },
+];
+
+const C_LABELS = {
+  freq:{high:'پرتکرار',med:'متوسط',low:'کم'},
+  copy:{manual:'کپی دستی',connected:'سیستم‌ها وصل',paper:'کاغذی'},
+  err_impact:{high:'پرهزینه',med:'گاهی',low:'کم'},
+  rule:{yes:'قاعده‌مند',somewhat:'تا حدی',no:'قضاوتی'},
+  decider:{yes:'خودِ مشتری',partly:'تا حدی',no:'فرد دیگر'},
+  timeline:{soon:'فوری',quarter:'چند ماه',later:'نامشخص'},
+};
+
+function analyze(a){
+  const hours = +a.hours || 0;
+  const wage = +a.wage || 30;
+  const errUnknown = !!a.err_cost_unknown;
+  const errCost = errUnknown
+    ? hours*wage*4.33*({high:0.20, med:0.10, low:0.03}[a.err_impact||'med'])
+    : (+a.err_cost || 0);
+  const eff = {yes:0.80, somewhat:0.55, no:0.30}[a.rule||'somewhat'];
+  const savedWeek = hours * eff;
+  const savedYear = savedWeek * 52;
+  const moneyHours = savedYear * wage;
+  const moneyErr = errCost * 12 * 0.6;
+  const moneyYear = moneyHours + moneyErr;
+  const remainWeek = hours - savedWeek;
+
+  const vol = {high:100, med:60, low:30}[a.freq||'med'];
+  const ruleS = {yes:100, somewhat:55, no:20}[a.rule||'somewhat'];
+  const copyArr = Array.isArray(a.copy)?a.copy:(a.copy?[a.copy]:[]);
+  const oppMap = {manual:100, connected:75, paper:65};
+  const opp = copyArr.length ? Math.max(...copyArr.map(c=>oppMap[c]||65)) : 75;
+  const errS = {high:100, med:65, low:35}[a.err_impact||'med'];
+  const readiness = Math.round((vol+ruleS+opp+errS)/4);
+
+  let level, levelText, levelColor;
+  if(readiness>=78){level='عالی';levelColor='var(--teal)';levelText='این فرایند نامزدِ بسیار خوبی برای اتوماسیون است. بهترین گزینه برای شروع سریع.';}
+  else if(readiness>=58){level='خوب';levelColor='var(--accent)';levelText='فرصت خوبی برای اتوماسیون وجود دارد، با چند نکته که باید مدیریت شود.';}
+  else if(readiness>=40){level='متوسط';levelColor='var(--amber)';levelText='اتوماسیون ممکن است، اما اول بهتر است فرایند کمی استانداردتر شود.';}
+  else {level='فعلاً نه';levelColor='var(--ink-faint)';levelText='در وضعیت فعلی، اتوماسیون توجیه کافی ندارد. اول فرایند را اصلاح کنید.';}
+
+  const recs=[];
+  recs.push({t:'win', text:`با اتوماسیون این کار، حدود <b>${fa(Math.round(savedWeek))} ساعت در هفته</b> آزاد می‌شود — یعنی سالانه نزدیک به <b>${fa(Math.round(savedYear))} ساعت</b>.`});
+  if(moneyYear>0) recs.push({t:'win', text:`ارزش تخمینی صرفه‌جویی سالانه: <b>${faMoney(moneyYear)}</b> (ترکیب زمان و کاهش خطا).`});
+  if(errUnknown) recs.push({t:'info', text:'هزینه‌ی دقیق خطا نامشخص بود؛ بر اساس شدت خطا و حجم کار به‌صورت محافظه‌کارانه تخمین زده شد. می‌توانید این عدد را با مشتری دقیق‌تر کنید.'});
+  if(copyArr.includes('manual')) recs.push({t:'info', text:'چون داده دستی بین برنامه‌ها جابه‌جا می‌شود، اتصال خودکار سیستم‌ها با <b>Make / Zapier / n8n</b> یک برد سریع است.'});
+  if(copyArr.includes('paper')) recs.push({t:'info', text:'چون هنوز روی کاغذ کار می‌کنید، اولین قدم دیجیتالی‌کردن فرم/داده است، بعد اتوماسیون.'});
+  if(a.freq==='high') recs.push({t:'win', text:'چون این کار پرتکرار است، اتوماسیون خیلی زود هزینه‌ی خود را برمی‌گرداند.'});
+  if(a.rule==='no') recs.push({t:'warn', text:'این کار به قضاوت انسانی وابسته است؛ به‌جای حذف کامل، فقط بخش‌های قاعده‌مندش را اتوماتیک کنید.'});
+  if(a.freq==='low' && readiness<58) recs.push({t:'warn', text:'حجم پایین است؛ مطمئن شوید هزینه‌ی ساخت اتوماسیون از صرفه‌جویی بیشتر نشود.'});
+  if(a.err_impact==='high') recs.push({t:'win', text:'چون خطاها پرهزینه‌اند، اتوماسیون علاوه بر زمان، ریسک و دوباره‌کاری را هم کم می‌کند.'});
+  if(a.decider==='no') recs.push({t:'warn', text:'تصمیم‌گیرنده‌ی نهایی در جلسه نبود؛ جلسه‌ی بعد را با حضور او بگذارید.'});
+  if(a.timeline==='soon') recs.push({t:'info', text:'مشتری فوریت دارد — یک پیشنهاد مشخص با یک «برد سریع» آماده کنید.'});
+
+  const clientRecs=[];
+  clientRecs.push(`هر هفته حدود <b>${fa(Math.round(savedWeek))} ساعت</b> از وقت شما آزاد می‌شود تا صرف کارهای مهم‌تر شود.`);
+  if(a.err_impact==='high'||a.err_impact==='med') clientRecs.push('خطاها و دوباره‌کاری به‌شکل محسوسی کم می‌شود.');
+  if(a.freq==='high'||a.freq==='med') clientRecs.push('کارها سریع‌تر، منظم‌تر و بدون فراموشی انجام می‌شوند.');
+  if(copyArr.includes('manual')||copyArr.includes('paper')) clientRecs.push('کارهای تکراری و دستی از روی دوش شما و تیم برداشته می‌شود.');
+  clientRecs.push(`ارزش تخمینی این صرفه‌جویی در سال حدود <b>${faMoney(moneyYear)}</b> است.`);
+
+  return {hours, savedWeek, savedYear, remainWeek, moneyYear, readiness, level, levelText, levelColor, recs, clientRecs};
+}
+
+function Gauge({value, color}){
+  const r=42, c=2*Math.PI*r, off=c*(1-value/100);
+  return (
+    <div className="gauge">
+      <svg width="96" height="96" viewBox="0 0 96 96">
+        <circle cx="48" cy="48" r={r} fill="none" stroke="var(--line)" strokeWidth="8"/>
+        <circle cx="48" cy="48" r={r} fill="none" stroke={color} strokeWidth="8"
+          strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off}
+          style={{transition:'stroke-dashoffset .9s cubic-bezier(.2,.7,.3,1)'}}/>
+      </svg>
+      <div className="g-num"><b>{fa(value)}</b><span>از ۱۰۰</span></div>
+    </div>
+  );
+}
+
+function App(){
+  const [stage, setStage] = useState('intro'); // intro | number(0..) | result
+  const [view, setView] = useState('pro'); // pro | client
+  const [client, setClient] = useState('');
+  const [answers, setAnswers] = useState(()=>{
+    const init={};
+    PHASES.forEach(p=>p.questions.forEach(q=>{
+      if(q.type==='slider') init[q.id]=q.def;
+      if(q.type==='choice') init[q.id]=q.def;
+      if(q.type==='multi') init[q.id]=[...q.def];
+    }));
+    return init;
+  });
+  const set = (id,v)=>setAnswers(s=>({...s,[id]:v}));
+  const result = useMemo(()=>analyze(answers),[answers]);
+
+  const startMeeting = ()=>setStage(0);
+
+  if(stage==='intro'){
+    return (
+      <div className="app">
+        <div className="topbar">
+          <div className="logo">⚙</div>
+          <div className="brand"><h1>دستیار جلسه‌ی اتوماسیون</h1><p>کشف نیاز مشتری و تخمین صرفه‌جویی</p></div>
+        </div>
+        <div className="card intro">
+          <div className="big display">با چند سوال ساده،<br/>مشکل مشتری را بسنج</div>
+          <p>این ابزار را سرِ جلسه باز کن. سوال‌ها را یکی‌یکی از مشتری بپرس و پاسخ‌ها را وارد کن. در پایان، خودش تحلیل می‌کند که با اتوماسیون چقدر زمان و هزینه می‌توانند صرفه‌جویی کنند.</p>
+          <div className="phase-list">
+            {PHASES.map((p,i)=><span key={i} className="phase-chip">{p.tag}</span>)}
+          </div>
+          <div className="field">
+            <label>نام مشتری یا کسب‌وکار (اختیاری)</label>
+            <input type="text" value={client} onChange={e=>setClient(e.target.value)} placeholder="مثلاً: سوپرمارکت رضایی"/>
+          </div>
+          <div className="nav">
+            <button className="btn btn-primary" onClick={startMeeting}>شروع جلسه →</button>
+          </div>
+        </div>
+        <div className="foot-note">تخمین‌ها جهت‌نما هستند و برای گفت‌وگو با مشتری طراحی شده‌اند، نه تضمین قطعی.</div>
+      </div>
+    );
+  }
+
+  if(stage==='result'){
+    const r=result;
+    const maxH=Math.max(r.hours,1);
+    return (
+      <div className="app">
+        <div className="topbar">
+          <div className="logo">⚙</div>
+          <div className="brand"><h1>تحلیل جلسه</h1><p>{client||'مشتری'}</p></div>
+        </div>
+        <div className="res-head">
+          <div className="res-client">{client||'تحلیل فرصت اتوماسیون'}</div>
+          <div className="label">{view==='pro'?'برآورد صرفه‌جویی با اتوماسیونِ فرایند اصلی':'این چیزی است که برای شما تغییر می‌کند'}</div>
+        </div>
+
+        <div className="seg">
+          <button className={view==='pro'?'on':''} onClick={()=>setView('pro')}>نمای مشاور</button>
+          <button className={view==='client'?'on':''} onClick={()=>setView('client')}>نمای مشتری</button>
+        </div>
+
+        {view==='client' && (
+          <div className="client-hello">با خودکار کردن کارهای تکراری، وقت و هزینه‌ای که امروز صرف کارهای دستی می‌شود آزاد می‌شود. خلاصه‌ی نتیجه:</div>
+        )}
+
+        <div className="metrics">
+          <div className="metric hero">
+            <div className="m-label">⏱ صرفه‌جویی زمان در سال</div>
+            <div className="m-val">{fa(Math.round(r.savedYear))}<span className="m-unit">ساعت</span></div>
+          </div>
+          <div className="metric">
+            <div className="m-label">در هفته</div>
+            <div className="m-val">{fa(Math.round(r.savedWeek))}<span className="m-unit">ساعت</span></div>
+          </div>
+          <div className="metric">
+            <div className="m-label">ارزش سالانه</div>
+            <div className="m-val" style={{fontSize:'24px'}}>{faMoney(r.moneyYear)}</div>
+          </div>
+        </div>
+
+        <div className="bars">
+          <h3>ساعت کار این فرایند در هفته</h3>
+          <div className="bar-row">
+            <div className="bar-top"><span>الان (دستی)</span><span className="v">{fa(Math.round(r.hours))} ساعت</span></div>
+            <div className="bar-track"><div className="bar-fill" style={{width:(r.hours/maxH*100)+'%',background:'var(--hot)'}}></div></div>
+          </div>
+          <div className="bar-row">
+            <div className="bar-top"><span>بعد از اتوماسیون</span><span className="v">{fa(Math.round(r.remainWeek))} ساعت</span></div>
+            <div className="bar-track"><div className="bar-fill" style={{width:(r.remainWeek/maxH*100)+'%',background:'var(--teal)'}}></div></div>
+          </div>
+        </div>
+
+        {view==='client' && (
+          <div className="recs">
+            <h3>چه چیزی برای شما بهتر می‌شود</h3>
+            {r.clientRecs.map((x,i)=>(
+              <div key={i} className="rec win">
+                <div className="ic">✓</div>
+                <div dangerouslySetInnerHTML={{__html:x}}/>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {view==='pro' && (<React.Fragment>
+        <div className="score-card">
+          <Gauge value={r.readiness} color={r.levelColor}/>
+          <div className="score-text">
+            <h3>آمادگی برای اتوماسیون: <span style={{color:r.levelColor}}>{r.level}</span></h3>
+            <p>{r.levelText}</p>
+          </div>
+        </div>
+
+        <div className="recs">
+          <h3>تحلیل و پیشنهادها</h3>
+          {r.recs.map((x,i)=>(
+            <div key={i} className={'rec '+x.t}>
+              <div className="ic">{x.t==='win'?'✓':x.t==='warn'?'!':'→'}</div>
+              <div dangerouslySetInnerHTML={{__html:x.text}}/>
+            </div>
+          ))}
+        </div>
+
+        <div className="notes-block">
+          <h3>خلاصه‌ی پاسخ‌های مشتری</h3>
+          {PHASES.flatMap(p=>p.questions).map(q=>{
+            let v=answers[q.id];
+            if(v===undefined||v===''||(Array.isArray(v)&&v.length===0)) return null;
+            if(q.type==='multi') v=v.map(x=>(C_LABELS[q.id]&&C_LABELS[q.id][x])||x).join('، ');
+            else if(q.type==='choice') v=(C_LABELS[q.id]&&C_LABELS[q.id][v])||v;
+            else if(q.type==='slider') v=(q.unknownable&&answers.err_cost_unknown)?'تخمینی (مشتری عدد دقیق نداد)':fa(v)+' '+(q.unit||'');
+            else v=String(v);
+            return <div key={q.id} className="note-item"><span className="nl">{q.label}</span><span className="nv">{v}</span></div>;
+          })}
+        </div>
+        </React.Fragment>)}
+
+        <div className="nav">
+          <button className="btn btn-primary" onClick={()=>{document.title=(client?client+' — ':'')+'تحلیل اتوماسیون';setTimeout(()=>window.print(),50);}}>📄 ذخیره / چاپ PDF</button>
+          <button className="btn btn-ghost" onClick={()=>{setStage('intro');}}>جلسه‌ی جدید</button>
+        </div>
+        <div className="foot-note">
+          {view==='pro'
+            ? <React.Fragment>روش محاسبه: ساعت صرفه‌جویی = ساعت هفتگی × بازده اتوماسیون (بسته به قاعده‌مند بودن کار). ارزش سالانه = ساعت سالانه × هزینه‌ی ساعتی + ۶۰٪ کاهش هزینه‌ی خطا.<br/>این اعداد تخمینی و برای گفت‌وگو هستند.</React.Fragment>
+            : 'اعداد بالا تخمینی و بر اساس اطلاعاتی است که در جلسه به ما دادید.'}
+        </div>
+      </div>
+    );
+  }
+
+  // question stage
+  const phase=PHASES[stage];
+  const isLast=stage===PHASES.length-1;
+  return (
+    <div className="app">
+      <div className="topbar">
+        <div className="logo">⚙</div>
+        <div className="brand"><h1>{client||'جلسه‌ی اتوماسیون'}</h1><p>مرحله‌ی {fa(stage+1)} از {fa(PHASES.length)}</p></div>
+      </div>
+      <div className="progress-wrap">
+        <div className="steps-row">
+          {PHASES.map((_,i)=><div key={i} className={'step-dot '+(i<stage?'done':i===stage?'active':'')}></div>)}
+        </div>
+        <div className="step-meta"><span>{phase.tag}</span><span>{fa(Math.round((stage)/PHASES.length*100))}٪</span></div>
+      </div>
+
+      <div className="card">
+        <div className="phase-tag">{phase.icon} {phase.tag}</div>
+        <div className="phase-title">{phase.title}</div>
+        <div className="phase-sub">{phase.sub}</div>
+
+        {phase.questions.map(q=>(
+          <div className="q" key={q.id}>
+            <div className="q-label"><span className="dot">●</span>{q.label}</div>
+            <div className="q-why">{q.why}</div>
+            {q.examples && (
+              <div className="q-ex">
+                <div className="ex-t">مثال‌هایی که می‌توانید به مشتری بگویید:</div>
+                {q.examples.map((ex,i)=><div key={i} className="ex-i">‏● {ex}</div>)}
+              </div>
+            )}
+            {q.type==='textarea' && <textarea value={answers[q.id]||''} onChange={e=>set(q.id,e.target.value)} placeholder="پاسخ مشتری…"/>}
+            {q.type==='text' && <input type="text" value={answers[q.id]||''} onChange={e=>set(q.id,e.target.value)} placeholder="پاسخ مشتری…"/>}
+            {q.type==='slider' && (
+              <React.Fragment>
+                <div className="num-row">
+                  <input type="range" min={q.min} max={q.max} step={q.step||1} value={answers[q.id]} disabled={q.unknownable&&answers.err_cost_unknown} style={{opacity:(q.unknownable&&answers.err_cost_unknown)?0.4:1}} onChange={e=>set(q.id,+e.target.value)}/>
+                  <div className="num-val">{(q.unknownable&&answers.err_cost_unknown)?'تخمینی':fa(answers[q.id])+' '+q.unit}</div>
+                </div>
+                {q.unknownable && (
+                  <div className="choices" style={{marginTop:'9px'}}>
+                    <div className={'choice '+(answers.err_cost_unknown?'sel':'')} onClick={()=>set('err_cost_unknown',!answers.err_cost_unknown)}>نمی‌دانم، خودت تخمین بزن</div>
+                  </div>
+                )}
+              </React.Fragment>
+            )}
+            {q.type==='choice' && (
+              <div className="choices">
+                {q.options.map(([val,lbl])=>(
+                  <div key={val} className={'choice '+(answers[q.id]===val?'sel':'')} onClick={()=>set(q.id,val)}>{lbl}</div>
+                ))}
+              </div>
+            )}
+            {q.type==='multi' && (
+              <div className="choices">
+                {q.options.map(([val,lbl])=>{
+                  const sel=(answers[q.id]||[]).includes(val);
+                  return <div key={val} className={'choice '+(sel?'sel':'')} onClick={()=>{
+                    const cur=answers[q.id]||[];
+                    set(q.id, sel? cur.filter(x=>x!==val) : [...cur,val]);
+                  }}>{lbl}</div>;
+                })}
+              </div>
+            )}
+          </div>
+        ))}
+
+        <div className="nav">
+          {isLast
+            ? <button className="btn btn-primary" onClick={()=>setStage('result')}>دیدن تحلیل ✦</button>
+            : <button className="btn btn-primary" onClick={()=>setStage(stage+1)}>سوال بعدی →</button>}
+          <button className="btn btn-ghost" onClick={()=>setStage(stage===0?'intro':stage-1)}>قبلی</button>
+        </div>
+      </div>
+      <div className="foot-note">پاسخ‌های عددی (ساعت، هزینه، تکرار) در محاسبه‌ی نهایی استفاده می‌شوند.</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

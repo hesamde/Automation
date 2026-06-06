@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="de" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Automatisierungs-Assistent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root{
+    --paper:#36363B; --card:#141416; --ink:#F3F1EB; --ink-soft:#B6B2AA;
+    --ink-faint:#888279; --line:#2C2C31; --line-soft:#202023;
+    --accent:#1FA37D; --accent-soft:#15332B; --accent-ink:#74D8B6;
+    --teal:#2BB58C; --teal-soft:#16332A; --teal-ink:#7FE0BE; --teal-line:#244A3D;
+    --amber:#E0A23A; --amber-soft:#3A2D12; --hot:#CB6A40;
+    --r:14px; --r-sm:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper);font-family:'Hanken Grotesk',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  .app{max-width:760px;margin:0 auto;padding:32px 20px 80px}
+  .display{font-family:'Fraunces',serif;font-weight:500}
+  ::selection{background:var(--accent-soft)}
+
+  .topbar{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .logo{width:38px;height:38px;border-radius:11px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .brand h1{font-size:17px;font-weight:600;line-height:1.2}
+  .brand p{font-size:12px;color:var(--ink-faint);margin-top:2px}
+
+  .progress-wrap{margin-bottom:26px}
+  .steps-row{display:flex;gap:6px;margin-bottom:14px}
+  .step-dot{flex:1;height:4px;border-radius:4px;background:var(--line);transition:background .3s}
+  .step-dot.done,.step-dot.active{background:var(--accent)}
+  .step-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-faint)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 26px 24px}
+  .phase-tag{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--accent-ink);background:var(--accent-soft);padding:5px 11px;border-radius:20px;margin-bottom:16px}
+  .phase-title{font-size:24px;font-weight:500;line-height:1.25;margin-bottom:4px}
+  .phase-sub{font-size:13px;color:var(--ink-soft);margin-bottom:24px}
+
+  .q{margin-bottom:22px}
+  .q:last-child{margin-bottom:0}
+  .q-label{font-size:15px;font-weight:500;margin-bottom:10px;line-height:1.55;display:flex;gap:8px;align-items:flex-start}
+  .q-label .dot{color:var(--accent);font-size:15px;flex-shrink:0;margin-top:1px}
+  .q-why{font-size:12.5px;color:var(--ink-faint);background:var(--line-soft);border-radius:var(--r-sm);padding:9px 12px;margin-bottom:12px;line-height:1.6}
+  .q-ex{background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:var(--r-sm);padding:11px 13px;margin-bottom:12px}
+  .q-ex .ex-t{font-size:12px;font-weight:600;color:var(--teal-ink);margin-bottom:7px}
+  .q-ex .ex-i{font-size:13px;color:var(--teal-ink);line-height:1.95}
+
+  textarea,input[type=text]{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;resize:vertical;transition:border-color .15s, background .15s}
+  textarea{min-height:64px}
+  textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent);background:var(--line-soft)}
+
+  .num-row{display:flex;align-items:center;gap:14px}
+  .num-row input[type=range]{flex:1;accent-color:var(--accent);height:5px}
+  .num-val{min-width:96px;text-align:center;background:var(--accent-soft);color:var(--accent-ink);border-radius:var(--r-sm);padding:8px 10px;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+
+  .choices{display:flex;gap:9px;flex-wrap:wrap}
+  .choice{flex:1;min-width:96px;text-align:center;font-size:13.5px;font-weight:500;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 8px;cursor:pointer;transition:all .15s;user-select:none}
+  .choice:hover{border-color:var(--ink-faint)}
+  .choice.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  .nav{display:flex;gap:12px;margin-top:26px}
+  .btn{font-family:inherit;font-size:15px;font-weight:600;border-radius:var(--r-sm);padding:13px 22px;cursor:pointer;border:1px solid transparent;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+  .btn-primary{background:var(--accent);color:#fff;flex:1}
+  .btn-primary:hover{background:var(--accent-ink)}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--ink-soft)}
+  .btn-ghost:hover{border-color:var(--ink-faint)}
+
+  .intro{text-align:center;padding:30px 10px 6px}
+  .intro .big{font-size:30px;line-height:1.25;margin-bottom:14px}
+  .intro p{font-size:14.5px;color:var(--ink-soft);line-height:1.75;max-width:500px;margin:0 auto 26px}
+  .intro .field{max-width:360px;margin:0 auto 8px;text-align:left}
+  .intro .field label{font-size:13px;color:var(--ink-faint);margin-bottom:6px;display:block}
+  .phase-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:24px 0 30px}
+  .phase-chip{font-size:12.5px;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:7px 13px}
+
+  .res-head{text-align:center;margin-bottom:6px}
+  .seg{display:flex;gap:4px;background:var(--line-soft);border-radius:var(--r-sm);padding:4px;max-width:360px;margin:0 auto 22px}
+  .seg button{flex:1;font-family:inherit;font-size:13.5px;font-weight:600;border:none;background:transparent;color:var(--ink-soft);padding:9px 10px;border-radius:7px;cursor:pointer;transition:all .15s}
+  .seg button.on{background:#3A3A40;color:var(--ink);box-shadow:none}
+  .client-hello{text-align:center;font-size:14.5px;color:var(--ink-soft);line-height:1.75;max-width:500px;margin:0 auto 22px}
+  @media print{.seg{display:none!important}}
+  .res-head .label{font-size:13px;color:var(--ink-faint);margin-bottom:18px}
+  .res-client{font-size:26px;font-weight:500;margin-bottom:4px}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0}
+  .metric{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 16px}
+  .metric.hero{grid-column:1/-1;background:var(--teal-soft);border-color:var(--teal-line)}
+  .metric .m-label{font-size:12.5px;color:var(--ink-faint);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .metric.hero .m-label{color:var(--teal-ink)}
+  .metric .m-val{font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+  .metric.hero .m-val{color:var(--teal-ink);font-size:38px}
+  .metric .m-unit{font-size:13px;font-weight:500;color:var(--ink-soft);margin-left:5px}
+  .metric.hero .m-unit{color:var(--teal-ink)}
+
+  .bars{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:18px}
+  .bars h3{font-size:14px;font-weight:600;margin-bottom:16px}
+  .bar-row{margin-bottom:14px}
+  .bar-row:last-child{margin-bottom:0}
+  .bar-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+  .bar-top .v{font-weight:600;font-variant-numeric:tabular-nums}
+  .bar-track{height:13px;background:var(--line-soft);border-radius:7px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:7px;transition:width .8s cubic-bezier(.2,.7,.3,1)}
+
+  .score-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:18px;display:flex;align-items:center;gap:20px}
+  .gauge{position:relative;width:96px;height:96px;flex-shrink:0}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .g-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .gauge .g-num b{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+  .gauge .g-num span{font-size:11px;color:var(--ink-faint)}
+  .score-text h3{font-size:16px;font-weight:600;margin-bottom:6px}
+  .score-text p{font-size:13px;color:var(--ink-soft);line-height:1.65}
+
+  .recs{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:18px}
+  .recs h3{font-size:15px;font-weight:600;margin-bottom:14px}
+  .rec{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:14px;line-height:1.6}
+  .rec:last-child{border-bottom:none;padding-bottom:0}
+  .rec .ic{flex-shrink:0;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+  .rec.win .ic{background:var(--teal-soft);color:var(--teal-ink)}
+  .rec.warn .ic{background:var(--amber-soft);color:var(--amber)}
+  .rec.info .ic{background:var(--accent-soft);color:var(--accent-ink)}
+  .rec b{font-weight:600}
+
+  .notes-block{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:18px}
+  .notes-block h3{font-size:15px;font-weight:600;margin-bottom:12px}
+  .note-item{font-size:13px;line-height:1.6;padding:8px 0;border-bottom:1px solid var(--line-soft)}
+  .note-item:last-child{border-bottom:none}
+  .note-item .nl{color:var(--ink-faint);display:block;font-size:12px;margin-bottom:2px}
+  .note-item .nv{color:var(--ink)}
+
+  .foot-note{font-size:11.5px;color:var(--ink-faint);text-align:center;line-height:1.7;margin-top:22px}
+  @media print{
+    :root{--paper:#fff;--card:#fff;--ink:#211C16;--ink-soft:#5C544A;--ink-faint:#7A746B;--line:#E5DFD3;--line-soft:#EFEAE0;--accent:#1D6E56;--accent-soft:#E1F0EA;--accent-ink:#0E4233;--teal:#1D6E56;--teal-soft:#E1F0EA;--teal-ink:#0E4233;--teal-line:#CFE6DC;--amber:#B07208;--amber-soft:#F8ECD4;--hot:#B4471F;}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    @page{size:A4 portrait;margin:10mm}
+    body{background:#fff}
+    .nav,.topbar .logo,.btn{display:none!important}
+    .app{padding:0;max-width:100%}
+    .topbar{margin-bottom:10px}
+    .res-client{font-size:20px}
+    .res-head .label{margin-bottom:8px}
+    .client-hello{font-size:12px;line-height:1.5;margin-bottom:12px}
+    .metrics{gap:8px;margin:12px 0}
+    .metric{padding:12px 14px}
+    .metric .m-label{margin-bottom:5px}
+    .metric .m-val{font-size:22px}
+    .metric.hero .m-val{font-size:30px}
+    .bars{padding:14px;margin-bottom:12px}
+    .bars h3{margin-bottom:10px}
+    .bar-row{margin-bottom:9px}
+    .recs{padding:14px 18px;margin-bottom:12px}
+    .recs h3{margin-bottom:8px}
+    .rec{padding:7px 0;font-size:12.5px}
+    .foot-note{margin-top:10px}
+    .card,.metric,.bars,.score-card,.recs,.notes-block{break-inside:avoid} }
+  @media(max-width:520px){ .metrics{grid-template-columns:1fr} .choices{flex-direction:column}
+    .num-row{flex-direction:column;align-items:stretch} .num-val{min-width:0} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState, useMemo} = React;
+const eur = n => new Intl.NumberFormat('de-DE',{maximumFractionDigits:0}).format(Math.round(n)) + ' €';
+const num = n => new Intl.NumberFormat('de-DE',{maximumFractionDigits:0}).format(Math.round(n));
+
+const PHASES = [
+  {
+    tag:'1 — Unternehmen', icon:'◔', title:'Das Unternehmen verstehen',
+    sub:'Lass den Kunden zuerst über seinen Arbeitsalltag erzählen.',
+    questions:[
+      {id:'biz_type', type:'text', label:'Was für ein Unternehmen führen Sie? (Laden, Firma, Dienstleistung …)', why:'Die Art des Geschäfts bestimmt das Automatisierungsmodell.'},
+      {id:'routine', type:'textarea', label:'Wie sieht eine typische Arbeitswoche bei Ihnen und im Team aus?', why:'Zeigt den echten Arbeitsfluss und wohin die Zeit fließt.'},
+      {id:'revenue', type:'textarea', label:'Woher kommt der meiste Umsatz? Wer ist Ihr Hauptkunde?', why:'Automatisierung sollte dort ansetzen, wo das Geld bewegt wird.'},
+      {id:'team', type:'slider', min:1, max:20, def:2, unit:'Personen', label:'Wie viele Personen sind im Team?', why:'Finde den Prozess-Verantwortlichen und den, der die manuelle Arbeit macht.'},
+    ]
+  },
+  {
+    tag:'2 — Prozess', icon:'◑', title:'Den aktuellen Prozess abbilden',
+    sub:'Geh ein echtes, aktuelles Beispiel Schritt für Schritt durch.',
+    questions:[
+      {id:'task', type:'textarea', label:'Was ist die zeitaufwändigste, sich wiederholende Aufgabe? Bitte Schritt für Schritt.', why:'Jeder manuelle Schritt, jedes Kopieren, jede Wartezeit zählt.'},
+      {id:'hours', type:'slider', min:0, max:40, def:8, unit:'Std', label:'Wie viele Stunden pro Woche kostet diese Aufgabe?', why:'Volumen und Zeit sind die Basis der Ersparnis-Rechnung.', key:true},
+      {id:'freq', type:'choice', def:'med', options:[['high','Mehrmals täglich'],['med','Mehrmals pro Woche'],['low','Gelegentlich']], label:'Wie oft wiederholt sich das?', why:'Je häufiger, desto mehr lohnt sich die Automatisierung.', key:true},
+      {id:'copy', type:'multi', def:['manual'], options:[['manual','Ja, manuell'],['connected','Nein, verbunden'],['paper','Auf Papier']], label:'Kopieren Sie Daten manuell zwischen Programmen?', why:'Manuelles Kopieren ist der beste Automatisierungs-Kandidat. (Mehrfachauswahl möglich)', key:true},
+    ]
+  },
+  {
+    tag:'3 — Schmerzpunkte', icon:'◕', title:'Den Schmerz beziffern',
+    sub:'Lass den Kunden die versteckten Kosten selbst erkennen.',
+    questions:[
+      {id:'hate', type:'textarea', label:'Welche Aufgabe hassen Sie, weil sie eintönig und repetitiv ist?', why:'Ehrlicher Schmerz = echte Chance.'},
+      {id:'err_impact', type:'choice', def:'med', options:[['high','Hoch & teuer'],['med','Manchmal'],['low','Selten']], label:'Wie viel Ärger gibt es, wenn dabei Fehler passieren?', why:'Mehr Fehler = höherer Wert der Automatisierung.', key:true},
+      {id:'err_cost', type:'slider', min:0, max:3000, step:50, def:300, unit:'€/Monat', unknownable:true, label:'Was kosten Fehler und Nacharbeit ungefähr pro Monat?', why:'Gemeint sind nicht nur Strafen, sondern auch die Zeit fürs Korrigieren, Nacharbeit und verlorene Kunden. Wenn der Kunde keine genaue Zahl hat, „Weiß ich nicht" antippen — dann wird automatisch geschätzt.', key:true},
+    ]
+  },
+  {
+    tag:'4 — Tools', icon:'◷', title:'Aktuelle Systeme',
+    sub:'Du musst wissen, was sich verbinden lässt.',
+    questions:[
+      {id:'tools', type:'textarea', label:'Welche Software und Apps nutzen Sie? (CRM, Buchhaltung, Kalender, WhatsApp, Excel …)', why:'Die meisten Automatisierungen sind der Klebstoff zwischen vorhandenen Apps.'},
+      {id:'rule', type:'choice', def:'yes', options:[['yes','Ja, klare Regeln'],['somewhat','Teilweise'],['no','Nein, Urteil nötig']], label:'Lassen sich die Regeln dieser Aufgabe aufschreiben?', why:'Regelbasiert = idealer Kandidat; urteilsabhängig bleibt menschlich.', key:true},
+    ]
+  },
+  {
+    tag:'5 — Budget & Entscheidung', icon:'◔', title:'Qualifizieren',
+    sub:'Schnell und professionell — direkt fragen.',
+    questions:[
+      {id:'wage', type:'slider', min:12, max:120, def:30, unit:'€/Std', label:'Was kostet die Stunde der Person, die das macht?', why:'Basis für die Berechnung der Geldersparnis.', key:true},
+      {id:'decider', type:'choice', def:'yes', options:[['yes','Ja, ich selbst'],['partly','Teilweise'],['no','Jemand anderes']], label:'Treffen Sie die finale Entscheidung?', why:'Fehlt der Entscheider, ist das Gespräch unvollständig.'},
+      {id:'timeline', type:'choice', def:'soon', options:[['soon','So schnell wie möglich'],['quarter','In ein paar Monaten'],['later','Noch unklar']], label:'Wann soll es starten?', why:'„So schnell wie möglich" = echtes Kaufsignal.'},
+    ]
+  },
+  {
+    tag:'6 — Erfolg', icon:'●', title:'Erfolg definieren',
+    sub:'Ohne Kennzahl gibt es keinen Business-Case.',
+    questions:[
+      {id:'success', type:'textarea', label:'Woran erkennen Sie in 6 Monaten, dass es sich gelohnt hat?', why:'Erfolg muss messbar sein.', examples:['„Wenn pro Woche 10 Stunden frei werden" 🕐','„Wenn ich abends keine Rechnungen mehr schreiben muss" 😮‍💨','„Wenn sich die Zahl der No-Shows halbiert" 📉','„Wenn monatlich 500 € Kosten gespart werden" 💶']},
+    ]
+  },
+];
+
+const C_LABELS = {
+  freq:{high:'Häufig',med:'Mittel',low:'Selten'},
+  copy:{manual:'Manuell',connected:'Verbunden',paper:'Papier'},
+  err_impact:{high:'Teuer',med:'Manchmal',low:'Gering'},
+  rule:{yes:'Regelbasiert',somewhat:'Teilweise',no:'Urteilsabhängig'},
+  decider:{yes:'Kunde selbst',partly:'Teilweise',no:'Andere Person'},
+  timeline:{soon:'Dringend',quarter:'Paar Monate',later:'Unklar'},
+};
+
+function analyze(a){
+  const hours=+a.hours||0, wage=+a.wage||30;
+  const errUnknown=!!a.err_cost_unknown;
+  const errCost=errUnknown
+    ? hours*wage*4.33*({high:0.20,med:0.10,low:0.03}[a.err_impact||'med'])
+    : (+a.err_cost||0);
+  const eff={yes:0.80,somewhat:0.55,no:0.30}[a.rule||'somewhat'];
+  const savedWeek=hours*eff, savedYear=savedWeek*52;
+  const moneyYear=savedYear*wage + errCost*12*0.6;
+  const remainWeek=hours-savedWeek;
+  const vol={high:100,med:60,low:30}[a.freq||'med'];
+  const ruleS={yes:100,somewhat:55,no:20}[a.rule||'somewhat'];
+  const copyArr=Array.isArray(a.copy)?a.copy:(a.copy?[a.copy]:[]);
+  const oppMap={manual:100,connected:75,paper:65};
+  const opp=copyArr.length?Math.max(...copyArr.map(c=>oppMap[c]||65)):75;
+  const errS={high:100,med:65,low:35}[a.err_impact||'med'];
+  const readiness=Math.round((vol+ruleS+opp+errS)/4);
+  let level,levelText,levelColor;
+  if(readiness>=78){level='Sehr gut';levelColor='var(--teal)';levelText='Dieser Prozess ist ein sehr guter Automatisierungs-Kandidat — ideal für einen schnellen Start.';}
+  else if(readiness>=58){level='Gut';levelColor='var(--accent)';levelText='Gute Chance zur Automatisierung, mit einigen Punkten, die zu beachten sind.';}
+  else if(readiness>=40){level='Mittel';levelColor='var(--amber)';levelText='Automatisierung ist möglich, aber der Prozess sollte zuerst standardisiert werden.';}
+  else{level='Noch nicht';levelColor='var(--ink-faint)';levelText='Im aktuellen Zustand lohnt sich die Automatisierung nicht. Erst den Prozess verbessern.';}
+  const recs=[];
+  recs.push({t:'win',text:`Durch Automatisierung werden ca. <b>${num(savedWeek)} Stunden pro Woche</b> frei — etwa <b>${num(savedYear)} Stunden im Jahr</b>.`});
+  if(moneyYear>0) recs.push({t:'win',text:`Geschätzter Wert der jährlichen Ersparnis: <b>${eur(moneyYear)}</b> (Zeit + weniger Fehler).`});
+  if(errUnknown) recs.push({t:'info',text:'Die genauen Fehlerkosten waren unklar; sie wurden konservativ aus Fehler-Schwere und Arbeitsvolumen geschätzt. Diese Zahl können Sie mit dem Kunden noch präzisieren.'});
+  if(copyArr.includes('manual')) recs.push({t:'info',text:'Da Daten manuell zwischen Programmen bewegt werden, ist eine Verbindung per <b>Make / Zapier / n8n</b> ein schneller Gewinn.'});
+  if(copyArr.includes('paper')) recs.push({t:'info',text:'Da noch auf Papier gearbeitet wird, ist der erste Schritt die Digitalisierung der Daten, dann die Automatisierung.'});
+  if(a.freq==='high') recs.push({t:'win',text:'Weil die Aufgabe sehr häufig ist, amortisiert sich die Automatisierung sehr schnell.'});
+  if(a.rule==='no') recs.push({t:'warn',text:'Diese Aufgabe braucht menschliches Urteil; automatisieren Sie nur die regelbasierten Teile statt sie ganz zu ersetzen.'});
+  if(a.freq==='low' && readiness<58) recs.push({t:'warn',text:'Geringes Volumen — achten Sie darauf, dass die Bau-Kosten nicht höher sind als die Ersparnis.'});
+  if(a.err_impact==='high') recs.push({t:'win',text:'Da Fehler teuer sind, senkt die Automatisierung neben Zeit auch Risiko und Nacharbeit.'});
+  if(a.decider==='no') recs.push({t:'warn',text:'Der finale Entscheider war nicht dabei; vereinbaren Sie den nächsten Termin mit ihm.'});
+  if(a.timeline==='soon') recs.push({t:'info',text:'Der Kunde hat Dringlichkeit — bereiten Sie ein konkretes Angebot mit einem „Quick Win" vor.'});
+  const clientRecs=[];
+  clientRecs.push(`Pro Woche werden rund <b>${num(savedWeek)} Stunden</b> Ihrer Zeit frei — für das, was wirklich zählt.`);
+  if(a.err_impact==='high'||a.err_impact==='med') clientRecs.push('Fehler und Nacharbeit gehen spürbar zurück.');
+  if(a.freq==='high'||a.freq==='med') clientRecs.push('Abläufe werden schneller, zuverlässiger und nichts wird vergessen.');
+  if(copyArr.includes('manual')||copyArr.includes('paper')) clientRecs.push('Repetitive Handarbeit fällt für Sie und Ihr Team weg.');
+  clientRecs.push(`Der geschätzte Wert dieser Ersparnis liegt bei rund <b>${eur(moneyYear)} pro Jahr</b>.`);
+  return {hours,savedWeek,savedYear,remainWeek,moneyYear,readiness,level,levelText,levelColor,recs,clientRecs};
+}
+
+function Gauge({value,color}){
+  const r=42,c=2*Math.PI*r,off=c*(1-value/100);
+  return (
+    <div className="gauge">
+      <svg width="96" height="96" viewBox="0 0 96 96">
+        <circle cx="48" cy="48" r={r} fill="none" stroke="var(--line)" strokeWidth="8"/>
+        <circle cx="48" cy="48" r={r} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={off} style={{transition:'stroke-dashoffset .9s cubic-bezier(.2,.7,.3,1)'}}/>
+      </svg>
+      <div className="g-num"><b>{value}</b><span>von 100</span></div>
+    </div>
+  );
+}
+
+function App(){
+  const [stage,setStage]=useState('intro');
+  const [view,setView]=useState('pro');
+  const [client,setClient]=useState('');
+  const [answers,setAnswers]=useState(()=>{
+    const init={}; PHASES.forEach(p=>p.questions.forEach(q=>{
+      if(q.type==='slider')init[q.id]=q.def; if(q.type==='choice')init[q.id]=q.def;
+      if(q.type==='multi')init[q.id]=[...q.def]; })); return init;
+  });
+  const set=(id,v)=>setAnswers(s=>({...s,[id]:v}));
+  const result=useMemo(()=>analyze(answers),[answers]);
+
+  if(stage==='intro'){
+    return (
+      <div className="app">
+        <div className="topbar"><div className="logo">⚙</div>
+          <div className="brand"><h1>Automatisierungs-Assistent</h1><p>Bedarf erkennen & Ersparnis schätzen</p></div></div>
+        <div className="card intro">
+          <div className="big display">Mit wenigen Fragen<br/>das Problem erkennen</div>
+          <p>Öffne dieses Tool im Termin. Stell dem Kunden die Fragen nacheinander und trag die Antworten ein. Am Ende analysiert es selbst, wie viel Zeit und Geld durch Automatisierung gespart werden kann.</p>
+          <div className="phase-list">{PHASES.map((p,i)=><span key={i} className="phase-chip">{p.tag}</span>)}</div>
+          <div className="field"><label>Kunde oder Unternehmen (optional)</label>
+            <input type="text" value={client} onChange={e=>setClient(e.target.value)} placeholder="z. B. Fahrschule Müller"/></div>
+          <div className="nav"><button className="btn btn-primary" onClick={()=>setStage(0)}>Termin starten →</button></div>
+        </div>
+        <div className="foot-note">Die Schätzungen sind Richtwerte für das Kundengespräch, keine Garantie.</div>
+      </div>
+    );
+  }
+
+  if(stage==='result'){
+    const r=result, maxH=Math.max(r.hours,1);
+    return (
+      <div className="app">
+        <div className="topbar"><div className="logo">⚙</div>
+          <div className="brand"><h1>Analyse</h1><p>{client||'Kunde'}</p></div></div>
+        <div className="res-head">
+          <div className="res-client">{client||'Automatisierungs-Potenzial'}</div>
+          <div className="label">{view==='pro'?'Geschätzte Ersparnis durch Automatisierung des Kernprozesses':'Das verändert sich für Sie'}</div>
+        </div>
+        <div className="seg">
+          <button className={view==='pro'?'on':''} onClick={()=>setView('pro')}>Berater-Ansicht</button>
+          <button className={view==='client'?'on':''} onClick={()=>setView('client')}>Kunden-Ansicht</button>
+        </div>
+        {view==='client' && (
+          <div className="client-hello">Indem wiederkehrende Aufgaben automatisch erledigt werden, wird die Zeit frei, die heute in Handarbeit fließt. Das Ergebnis im Überblick:</div>
+        )}
+        <div className="metrics">
+          <div className="metric hero"><div className="m-label">⏱ Zeitersparnis pro Jahr</div>
+            <div className="m-val">{num(r.savedYear)}<span className="m-unit">Std</span></div></div>
+          <div className="metric"><div className="m-label">Pro Woche</div>
+            <div className="m-val">{num(r.savedWeek)}<span className="m-unit">Std</span></div></div>
+          <div className="metric"><div className="m-label">Wert pro Jahr</div>
+            <div className="m-val" style={{fontSize:'24px'}}>{eur(r.moneyYear)}</div></div>
+        </div>
+        <div className="bars">
+          <h3>Arbeitsstunden für diesen Prozess pro Woche</h3>
+          <div className="bar-row"><div className="bar-top"><span>Jetzt (manuell)</span><span className="v">{num(r.hours)} Std</span></div>
+            <div className="bar-track"><div className="bar-fill" style={{width:(r.hours/maxH*100)+'%',background:'var(--hot)'}}></div></div></div>
+          <div className="bar-row"><div className="bar-top"><span>Nach Automatisierung</span><span className="v">{num(r.remainWeek)} Std</span></div>
+            <div className="bar-track"><div className="bar-fill" style={{width:(r.remainWeek/maxH*100)+'%',background:'var(--teal)'}}></div></div></div>
+        </div>
+        {view==='client' && (
+          <div className="recs"><h3>Was für Sie besser wird</h3>
+            {r.clientRecs.map((x,i)=>(<div key={i} className="rec win">
+              <div className="ic">✓</div><div dangerouslySetInnerHTML={{__html:x}}/></div>))}
+          </div>
+        )}
+        {view==='pro' && (<React.Fragment>
+        <div className="score-card"><Gauge value={r.readiness} color={r.levelColor}/>
+          <div className="score-text"><h3>Automatisierungs-Reife: <span style={{color:r.levelColor}}>{r.level}</span></h3><p>{r.levelText}</p></div></div>
+        <div className="recs"><h3>Analyse & Empfehlungen</h3>
+          {r.recs.map((x,i)=>(<div key={i} className={'rec '+x.t}>
+            <div className="ic">{x.t==='win'?'✓':x.t==='warn'?'!':'→'}</div>
+            <div dangerouslySetInnerHTML={{__html:x.text}}/></div>))}</div>
+        <div className="notes-block"><h3>Zusammenfassung der Antworten</h3>
+          {PHASES.flatMap(p=>p.questions).map(q=>{
+            let v=answers[q.id]; if(v===undefined||v===''||(Array.isArray(v)&&v.length===0))return null;
+            if(q.type==='multi')v=v.map(x=>(C_LABELS[q.id]&&C_LABELS[q.id][x])||x).join(', ');
+            else if(q.type==='choice')v=(C_LABELS[q.id]&&C_LABELS[q.id][v])||v;
+            else if(q.type==='slider')v=(q.unknownable&&answers.err_cost_unknown)?'Schätzung (keine genaue Angabe)':num(v)+' '+(q.unit||''); else v=String(v);
+            return <div key={q.id} className="note-item"><span className="nl">{q.label}</span><span className="nv">{v}</span></div>;
+          })}</div>
+        </React.Fragment>)}
+        <div className="nav">
+          <button className="btn btn-primary" onClick={()=>{document.title=(client?client+' — ':'')+'Automatisierungs-Analyse';setTimeout(()=>window.print(),50);}}>📄 Als PDF speichern / drucken</button>
+          <button className="btn btn-ghost" onClick={()=>setStage('intro')}>Neuer Termin</button></div>
+        <div className="foot-note">{view==='pro'
+          ? 'Rechenweg: gesparte Stunden = Wochenstunden × Automatisierungs-Effizienz (je nach Regelhaftigkeit). Jahreswert = Jahresstunden × Stundenkosten + 60 % der Fehlerkosten. Richtwerte fürs Gespräch.'
+          : 'Die Zahlen sind Schätzungen auf Basis der Angaben aus unserem Gespräch.'}</div>
+      </div>
+    );
+  }
+
+  const phase=PHASES[stage], isLast=stage===PHASES.length-1;
+  return (
+    <div className="app">
+      <div className="topbar"><div className="logo">⚙</div>
+        <div className="brand"><h1>{client||'Automatisierungs-Termin'}</h1><p>Schritt {stage+1} von {PHASES.length}</p></div></div>
+      <div className="progress-wrap">
+        <div className="steps-row">{PHASES.map((_,i)=><div key={i} className={'step-dot '+(i<stage?'done':i===stage?'active':'')}></div>)}</div>
+        <div className="step-meta"><span>{phase.tag}</span><span>{Math.round(stage/PHASES.length*100)}%</span></div>
+      </div>
+      <div className="card">
+        <div className="phase-tag">{phase.icon} {phase.tag}</div>
+        <div className="phase-title">{phase.title}</div>
+        <div className="phase-sub">{phase.sub}</div>
+        {phase.questions.map(q=>(
+          <div className="q" key={q.id}>
+            <div className="q-label"><span className="dot">●</span>{q.label}</div>
+            <div className="q-why">{q.why}</div>
+            {q.examples && (
+              <div className="q-ex">
+                <div className="ex-t">Beispiele, die Sie dem Kunden nennen können:</div>
+                {q.examples.map((ex,i)=><div key={i} className="ex-i">● {ex}</div>)}
+              </div>
+            )}
+            {q.type==='textarea' && <textarea value={answers[q.id]||''} onChange={e=>set(q.id,e.target.value)} placeholder="Antwort des Kunden …"/>}
+            {q.type==='text' && <input type="text" value={answers[q.id]||''} onChange={e=>set(q.id,e.target.value)} placeholder="Antwort des Kunden …"/>}
+            {q.type==='slider' && (<React.Fragment>
+              <div className="num-row">
+                <input type="range" min={q.min} max={q.max} step={q.step||1} value={answers[q.id]} disabled={q.unknownable&&answers.err_cost_unknown} style={{opacity:(q.unknownable&&answers.err_cost_unknown)?0.4:1}} onChange={e=>set(q.id,+e.target.value)}/>
+                <div className="num-val">{(q.unknownable&&answers.err_cost_unknown)?'Schätzung':num(answers[q.id])+' '+q.unit}</div></div>
+              {q.unknownable && (<div className="choices" style={{marginTop:'9px'}}>
+                <div className={'choice '+(answers.err_cost_unknown?'sel':'')} onClick={()=>set('err_cost_unknown',!answers.err_cost_unknown)}>Weiß ich nicht – bitte schätzen</div></div>)}
+            </React.Fragment>)}
+            {q.type==='choice' && (<div className="choices">
+              {q.options.map(([val,lbl])=>(<div key={val} className={'choice '+(answers[q.id]===val?'sel':'')} onClick={()=>set(q.id,val)}>{lbl}</div>))}</div>)}
+            {q.type==='multi' && (<div className="choices">
+              {q.options.map(([val,lbl])=>{const sel=(answers[q.id]||[]).includes(val);
+                return <div key={val} className={'choice '+(sel?'sel':'')} onClick={()=>{const cur=answers[q.id]||[];set(q.id, sel?cur.filter(x=>x!==val):[...cur,val]);}}>{lbl}</div>;})}</div>)}
+          </div>
+        ))}
+        <div className="nav">
+          {isLast ? <button className="btn btn-primary" onClick={()=>setStage('result')}>Analyse ansehen ✦</button>
+                  : <button className="btn btn-primary" onClick={()=>setStage(stage+1)}>Nächste Frage →</button>}
+          <button className="btn btn-ghost" onClick={()=>setStage(stage===0?'intro':stage-1)}>Zurück</button>
+        </div>
+      </div>
+      <div className="foot-note">Die Zahlen-Antworten (Stunden, Kosten, Häufigkeit) fließen in die Endberechnung ein.</div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
